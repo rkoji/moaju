@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import rkoji.moaju.global.response.ApiResponse;
+import rkoji.moaju.user.dto.LoginRequest;
 import rkoji.moaju.user.dto.SignUpRequest;
 import rkoji.moaju.user.service.UserService;
 
@@ -23,5 +24,11 @@ public class UserController {
 	public ResponseEntity<ApiResponse<Void>> signUp(@RequestBody @Valid SignUpRequest request) {
 		userService.signUp(request);
 		return ResponseEntity.ok(ApiResponse.ok());
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<ApiResponse<String>> login(@RequestBody @Valid LoginRequest request) {
+		String token = userService.login(request);
+		return ResponseEntity.ok(ApiResponse.ok(token));
 	}
 }
