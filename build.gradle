@@ -50,17 +50,18 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
-    // QueryDSL - 동적 쿼리 (계좌별, 종목별 필터링)
-    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
-    annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
-    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
-    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+//    // QueryDSL - 동적 쿼리 (계좌별, 종목별 필터링)
+//    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
+//    annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
+//    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+//    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
     // ── 테스트 ────────────────────────────────────────
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
 
     // Testcontainers - 실제 PostgreSQL, Redis 띄워서 통합 테스트
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.0')
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
 
