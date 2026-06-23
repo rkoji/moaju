@@ -23,8 +23,8 @@ public class JwtFilter extends OncePerRequestFilter {
 		FilterChain filterChain) throws ServletException, IOException {
 		String token = resolveToken(request);
 
-		if (token != null && jwtProvider.validateToken(token)) {
-			Long userId = jwtProvider.getUserId(token);
+		if (token != null && jwtProvider.validateAccessToken(token)) {
+			Long userId = jwtProvider.getUserIdFromAccessToken(token);
 			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 				userId, null, List.of());
 			SecurityContextHolder.getContext().setAuthentication(authentication);

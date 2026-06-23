@@ -20,3 +20,12 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+
+jwt:
+  access-secret: ${JWT_ACCESS_SECRET}
+  access-expiration-ms: 3600000
+  refresh-secret: ${JWT_REFRESH_SECRET}
+  refresh-expiration-ms: 1209600000
+
+cookie:
+  secure: true

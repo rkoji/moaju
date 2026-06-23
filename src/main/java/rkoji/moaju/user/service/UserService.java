@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import rkoji.moaju.global.exception.CustomException;
 import rkoji.moaju.global.jwt.JwtProvider;
+import rkoji.moaju.global.jwt.RefreshTokenRepository;
+import rkoji.moaju.global.jwt.TokenResponse;
 import rkoji.moaju.user.dto.LoginRequest;
 import rkoji.moaju.user.dto.SignUpRequest;
 import rkoji.moaju.user.entity.User;
@@ -19,6 +21,7 @@ import rkoji.moaju.user.repository.UserRepository;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final RefreshTokenRepository refreshTokenRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProvider jwtProvider;
 
@@ -38,16 +41,47 @@ public class UserService {
 	}
 
 	@Transactional
-	public String login(LoginRequest request) {
+	public TokenResponse login(LoginRequest request) {
 		User user = userRepository.findByEmail(request.email()).orElseThrow(
 			() -> new CustomException(USER_NOT_FOUND)
 		);
 
 		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
 			throw new CustomException(INVALID_PASSWORD);
-
 		}
 
-		return jwtProvider.generateToken(user.getId());
+		String accessToken = jwtProvider.generateAccessToken(user.getId());
+		String refreshToken = jwtProvider.generateRefreshToken(user.getId());
+
+		refreshTokenRepository.save(user.getId(), refreshToken, jwtProvider.getRefreshExpirationMs());
+
+		return new TokenResponse(accessToken, refreshToken);
+	}
+
+	@Transactional
+	public TokenResponse reissue(String refreshToken) {
+		if (refreshToken == null || !jwtProvider.validateRefreshToken(refreshToken)) {
+			throw new CustomException(INVALID_REFRESH_TOKEN);
+		}
+
+		Long userId = jwtProvider.getUserIdFromRefreshToken(refreshToken);
+
+		String savedRefreshToken = refreshTokenRepository.findByUserId(userId)
+			.orElseThrow(() -> new CustomException(INVALID_REFRESH_TOKEN));
+
+		if (!savedRefreshToken.equals(refreshToken)) {
+			throw new CustomException(INVALID_REFRESH_TOKEN);
+		}
+
+		String newAccessToken = jwtProvider.generateAccessToken(userId);
+		String newRefreshToken = jwtProvider.generateRefreshToken(userId);
+
+		refreshTokenRepository.save(userId, newRefreshToken, jwtProvider.getRefreshExpirationMs());
+
+		return new TokenResponse(newAccessToken, newRefreshToken);
+	}
+
+	public void logout(Long userId) {
+		refreshTokenRepository.deleteByUserId(userId);
 	}
 }
