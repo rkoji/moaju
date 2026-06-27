@@ -77,7 +77,12 @@ export default function AccountsPage() {
         <ul>
           {accounts.map((account) => (
             <li key={account.id} style={{ marginBottom: 8 }}>
-              [{account.brokerName}] {account.nickname}
+              <span
+                onClick={() => navigate(`/accounts/${account.id}/portfolio`)}
+                style={{ cursor: "pointer", textDecoration: "underline" }}
+              >
+                [{account.brokerName}] {account.nickname}
+              </span>
               <button onClick={() => handleDelete(account.id)} style={{ marginLeft: 8 }}>
                 삭제
               </button>

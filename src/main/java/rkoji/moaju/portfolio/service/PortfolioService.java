@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import rkoji.moaju.account.repository.BrokerageAccountRepository;
 import rkoji.moaju.global.exception.CustomException;
 import rkoji.moaju.global.exception.ErrorCode;
@@ -24,6 +25,7 @@ import rkoji.moaju.trade.entity.Trade;
 import rkoji.moaju.trade.entity.TradeType;
 import rkoji.moaju.trade.repository.TradeRepository;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -54,6 +56,7 @@ public class PortfolioService {
 			.reduce(BigDecimal.ZERO, BigDecimal::add);
 
 		BigDecimal totalEvaluation = holdings.stream()
+			.filter(h -> h.currentPrice() != null)
 			.map(h -> h.currentPrice().multiply(h.quantity()))
 			.reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -88,12 +91,20 @@ public class PortfolioService {
 
 		BigDecimal holdingQuantity = totalBuyQuantity.subtract(totalSellQuantity);
 		BigDecimal averagePrice = totalBuyAmount.divide(totalBuyQuantity, 6, RoundingMode.HALF_UP);
-		BigDecimal currentPrice = stockPriceService.getCurrentPrice(stock.getTicker());
 
-		BigDecimal profitLoss = currentPrice.subtract(averagePrice).multiply(holdingQuantity);
-		BigDecimal profitLossRate = currentPrice.subtract(averagePrice)
-			.divide(averagePrice, 6, RoundingMode.HALF_UP)
-			.multiply(BigDecimal.valueOf(100));
+		BigDecimal currentPrice = null;
+		BigDecimal profitLoss = null;
+		BigDecimal profitLossRate = null;
+
+		try {
+			currentPrice = stockPriceService.getCurrentPrice(stock.getTicker());
+			profitLoss = currentPrice.subtract(averagePrice).multiply(holdingQuantity);
+			profitLossRate = currentPrice.subtract(averagePrice)
+				.divide(averagePrice, 6, RoundingMode.HALF_UP)
+				.multiply(BigDecimal.valueOf(100));
+		} catch (Exception e) {
+			log.warn("현재가 조회 실패 - ticker: {}", stock.getTicker());
+		}
 
 		return new HoldingResponse(
 			stockId, stock.getTicker(), stock.getName(),

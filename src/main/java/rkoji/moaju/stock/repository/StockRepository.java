@@ -17,6 +17,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
 
 	List<Stock> findAllByMarket(Market market);
 
-	@Query("SELECT s FROM Stock s WHERE s.isActive = true AND (LOWER(s.name) LIKE LOWER(CONCAT('%', :q, '%')) OR s.ticker LIKE CONCAT('%', :q, '%')) ORDER BY s.name")
+	@Query("SELECT s FROM Stock s WHERE s.isActive = true AND (LOWER(s.name) LIKE LOWER(CONCAT('%', :q, '%')) "
+		+ "OR s.ticker LIKE CONCAT('%', :q, '%')) ORDER BY s.name")
 	List<Stock> searchActive(@Param("q") String query, Pageable pageable);
 }

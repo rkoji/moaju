@@ -65,4 +65,42 @@ public class TradeService {
 			})
 			.toList();
 	}
+
+	public List<TradeResponse> getTradeByStock(Long userId, Long accountId, Long stockId) {
+		accountRepository.findByIdAndUserId(accountId, userId).orElseThrow(
+			() -> new CustomException(ACCOUNT_NOT_FOUND)
+		);
+
+		return tradeRepository.findAllByAccountIdAndStockId(accountId, stockId).stream()
+			.map(trade -> {
+				Stock stock = stockRepository.findById(trade.getStockId()).orElseThrow(
+					() -> new CustomException(STOCK_NOT_FOUND)
+				);
+				return TradeResponse.of(trade, stock);
+			})
+			.toList();
+	}
+
+	@Transactional
+	public void deleteTrade(Long userId, Long accountId, Long tradeId) {
+		accountRepository.findByIdAndUserId(accountId, userId).orElseThrow(
+			() -> new CustomException(ACCOUNT_NOT_FOUND)
+		);
+
+		Trade trade = tradeRepository.findById(tradeId).orElseThrow(
+			() -> new CustomException(TRADE_NOT_FOUND)
+		);
+
+		tradeRepository.delete(trade);
+	}
+
+	@Transactional
+	public void deleteAllByStock(Long userId, Long accountId, Long stockId) {
+		accountRepository.findByIdAndUserId(accountId, userId).orElseThrow(
+			() -> new CustomException(ACCOUNT_NOT_FOUND)
+		);
+
+		List<Trade> trades = tradeRepository.findAllByAccountIdAndStockId(accountId, stockId);
+		tradeRepository.deleteAll(trades);
+	}
 }

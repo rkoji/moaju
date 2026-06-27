@@ -3,6 +3,9 @@ import { AuthProvider, useAuth } from "./auth/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import AccountsPage from "./pages/AccountsPage";
+import PortfolioPage from "./pages/PortfolioPage";
+import AddTradePage from "./pages/AddTradePage";
+import HoldingDetailPage from "./pages/HoldingDetailPage";
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, isRestoring } = useAuth();
@@ -22,6 +25,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <AccountsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts/:accountId/portfolio"
+            element={
+              <ProtectedRoute>
+                <PortfolioPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts/:accountId/holdings/:stockId"
+            element={
+              <ProtectedRoute>
+                <HoldingDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts/:accountId/trades/new"
+            element={
+              <ProtectedRoute>
+                <AddTradePage />
               </ProtectedRoute>
             }
           />
