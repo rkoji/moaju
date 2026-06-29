@@ -50,6 +50,9 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
 //    // QueryDSL - 동적 쿼리 (계좌별, 종목별 필터링)
 //    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
 //    annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
