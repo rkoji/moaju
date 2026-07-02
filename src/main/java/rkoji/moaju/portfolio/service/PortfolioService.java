@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import rkoji.moaju.account.repository.BrokerageAccountRepository;
 import rkoji.moaju.global.exception.CustomException;
-import rkoji.moaju.global.exception.ErrorCode;
 import rkoji.moaju.portfolio.dto.HoldingResponse;
 import rkoji.moaju.portfolio.dto.PortfolioResponse;
 import rkoji.moaju.stock.entity.Stock;
@@ -71,6 +70,32 @@ public class PortfolioService {
 
 	}
 
+	public BigDecimal calculateProfitRate(Long accountId) {
+		List<Trade> trades = tradeRepository.findALlByAccountId(accountId);
+
+		Map<Long, List<Trade>> tradesByStock = trades.stream()
+			.collect(Collectors.groupingBy(Trade::getStockId));
+
+		BigDecimal totalPurchase = BigDecimal.ZERO;
+		BigDecimal totalEvaluation = BigDecimal.ZERO;
+
+		for (Map.Entry<Long, List<Trade>> entry : tradesByStock.entrySet()) {
+			HoldingResponse holding = toHolding(entry.getKey(), entry.getValue());
+			if (holding.quantity().compareTo(BigDecimal.ZERO) <= 0) continue;
+			if (holding.currentPrice() == null) continue; // 현재가 조회 실패 종목은 아예 제외
+
+			totalPurchase = totalPurchase.add(holding.averagePrice().multiply(holding.quantity()));
+			totalEvaluation = totalEvaluation.add(holding.currentPrice().multiply(holding.quantity()));
+		}
+		if (totalPurchase.compareTo(BigDecimal.ZERO) == 0) {
+			return BigDecimal.ZERO;
+		}
+
+		return totalEvaluation.subtract(totalPurchase)
+			.divide(totalPurchase, 6, RoundingMode.HALF_UP)
+			.multiply(BigDecimal.valueOf(100));
+	}
+
 	private HoldingResponse toHolding(Long stockId, List<Trade> trades) {
 		Stock stock = stockRepository.findById(stockId).orElseThrow(
 			() -> new CustomException(STOCK_NOT_FOUND)
@@ -84,7 +109,7 @@ public class PortfolioService {
 			if (trade.getType() == TradeType.BUY) {
 				totalBuyQuantity = totalBuyQuantity.add(trade.getQuantity());
 				totalBuyAmount = totalBuyAmount.add(trade.getQuantity().multiply(trade.getPrice()));
-			}else {
+			} else {
 				totalSellQuantity = totalSellQuantity.add(trade.getQuantity());
 			}
 		}
@@ -114,6 +139,4 @@ public class PortfolioService {
 		);
 
 	}
-
-
 }

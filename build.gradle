@@ -62,6 +62,9 @@ dependencies {
     // Redisson
     implementation 'org.redisson:redisson:3.40.0'
 
+    // email
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
     // ── 테스트 ────────────────────────────────────────
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'

@@ -1,5 +1,7 @@
 package rkoji.moaju.account.service;
 
+import static rkoji.moaju.global.exception.ErrorCode.*;
+
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import rkoji.moaju.account.dto.CreateAccountRequest;
 import rkoji.moaju.account.dto.UpdateAccountRequest;
 import rkoji.moaju.account.entity.BrokerageAccount;
 import rkoji.moaju.account.repository.BrokerageAccountRepository;
+import rkoji.moaju.alert.dto.UpdateAlertRequest;
 import rkoji.moaju.global.exception.CustomException;
 import rkoji.moaju.global.exception.ErrorCode;
 
@@ -54,8 +57,22 @@ public class AccountService {
 		accountRepository.delete(account);
 	}
 
+	@Transactional
+	public void updateAlertSettings(Long userId, Long accountId, UpdateAlertRequest request) {
+		BrokerageAccount account = accountRepository.findByIdAndUserId(accountId, userId).orElseThrow(
+			() -> new CustomException(ACCOUNT_NOT_FOUND)
+		);
+
+		account.updateAlertSettings(
+			request.targetProfitRate(),
+			request.alertThreshold(),
+			request.alertEnabled()
+		);
+	}
+
 	private BrokerageAccount findOwnedAccount(Long userId, Long accountId) {
 		return accountRepository.findByIdAndUserId(accountId, userId)
-			.orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+			.orElseThrow(() -> new CustomException(ACCOUNT_NOT_FOUND));
 	}
+
 }

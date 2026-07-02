@@ -12,4 +12,6 @@ public interface BrokerageAccountRepository extends JpaRepository<BrokerageAccou
 	List<BrokerageAccount> findAllByUserId(Long userId);
 
 	Optional<BrokerageAccount> findByIdAndUserId(Long id, Long userId);
+
+	List<BrokerageAccount> findByAlertEnabledTrueAndTargetProfitRateIsNotNullAndAlertThresholdIsNotNull();
 }
