@@ -29,6 +29,16 @@ services:
       timeout: 5s
       retries: 5
 
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: moaju-redis-exporter
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: "redis:6379"
+    depends_on:
+      - redis
+
   prometheus:
     image: prom/prometheus:latest
     container_name: moaju-prometheus

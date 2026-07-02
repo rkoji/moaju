@@ -9,3 +9,7 @@ scrape_configs:
       - targets: ['host.docker.internal:8080']
         labels:
           application: 'moaju'
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
