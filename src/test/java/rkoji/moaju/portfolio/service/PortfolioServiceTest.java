@@ -42,6 +42,7 @@ class PortfolioServiceTest {
 	private static final Long USER_ID = 1L;
 	private static final Long ACCOUNT_ID = 10L;
 	private static final Long STOCK_ID = 100L;
+	private static final Long STOCK_ID_2 = 200L;
 
 	private BrokerageAccount account() {
 		return BrokerageAccount.builder()
@@ -60,9 +61,25 @@ class PortfolioServiceTest {
 			.build();
 	}
 
+	private Stock stock2() {
+		return Stock.builder()
+			.ticker("000660")
+			.name("SK하이닉스")
+			.market(Market.KOSPI)
+			.currency(Currency.KRW)
+			.build();
+	}
+
 	private Trade buyTrade(BigDecimal quantity, BigDecimal price) {
 		return Trade.builder()
 			.accountId(ACCOUNT_ID).stockId(STOCK_ID)
+			.type(TradeType.BUY).quantity(quantity).price(price)
+			.build();
+	}
+
+	private Trade buyTrade(Long stockId, BigDecimal quantity, BigDecimal price) {
+		return Trade.builder()
+			.accountId(ACCOUNT_ID).stockId(stockId)
 			.type(TradeType.BUY).quantity(quantity).price(price)
 			.build();
 	}
@@ -182,6 +199,79 @@ class PortfolioServiceTest {
 			assertThat(response.holdings()).hasSize(1);
 			assertThat(response.holdings().get(0).currentPrice()).isNull();
 			assertThat(response.holdings().get(0).profitLossRate()).isNull();
+		}
+	}
+
+	@Nested
+	class 수익률_계산{
+
+		@Test
+		void 현재가_조회시_수익률_정상_계산(){
+			// given
+			// 10주 @ 70,000 매수, 현재가 77,000
+			// 수익률 = (77,000 - 70,000) / 70,000 * 100 = 10%
+			List<Trade> trades = List.of(
+				buyTrade(new BigDecimal("10"), new BigDecimal("70000"))
+			);
+			given(accountRepository.findByIdAndUserId(ACCOUNT_ID, USER_ID)).willReturn(Optional.of(account()));
+			given(tradeRepository.findALlByAccountId(ACCOUNT_ID)).willReturn(trades);
+			given(stockRepository.findById(STOCK_ID)).willReturn(Optional.of(stock()));
+			given(stockPriceService.getCurrentPrice("005930")).willReturn(new BigDecimal("77000"));
+
+			// when
+			PortfolioResponse response = portfolioService.getPortfolio(USER_ID, ACCOUNT_ID);
+
+			// then
+			assertThat(response.holdings().get(0).profitLossRate()).isEqualByComparingTo(new BigDecimal("10"));
+			assertThat(response.holdings().get(0).profitLoss()).isEqualByComparingTo(new BigDecimal("70000"));
+		}
+
+		@Test
+		void 현재가_하락시_손실_수익률_계산(){
+			// given
+			// 10주 @70,000 매수, 현재가 63,000
+			// 수익률 = (63,000 - 70,000) / 70,000 * 100 = -10%
+			List<Trade> trades = List.of(
+				buyTrade(new BigDecimal("10"), new BigDecimal("70000"))
+			);
+			given(accountRepository.findByIdAndUserId(ACCOUNT_ID, USER_ID)).willReturn(Optional.of(account()));
+			given(tradeRepository.findALlByAccountId(ACCOUNT_ID)).willReturn(trades);
+			given(stockRepository.findById(STOCK_ID)).willReturn(Optional.of(stock()));
+			given(stockPriceService.getCurrentPrice("005930")).willReturn(new BigDecimal("63000"));
+
+			// when
+			PortfolioResponse response = portfolioService.getPortfolio(USER_ID, ACCOUNT_ID);
+
+			// then
+			assertThat(response.holdings().get(0).profitLossRate()).isEqualByComparingTo(new BigDecimal("-10"));
+			assertThat(response.holdings().get(0).profitLoss()).isEqualByComparingTo(new BigDecimal("-70000"));
+		}
+
+		@Test
+		void 여러_종목_보유시_전체_수익률_합산() {
+			// given
+			// A종목(삼성전자): 10주 @ 70,000 매수, 현재가 77,000 → 매수금 700,000 / 평가금 770,000 / 손익 +70,000
+			// B종목(SK하이닉스): 5주 @ 100,000 매수, 현재가 90,000 → 매수금 500,000 / 평가금 450,000 / 손익 -50,000
+			// 합산: 매수금 1,200,000 / 평가금 1,220,000 / 손익 +20,000 / 수익률 ≈ 1.666667%
+			List<Trade> trades = List.of(
+				buyTrade(new BigDecimal("10"), new BigDecimal("70000")),
+				buyTrade(STOCK_ID_2, new BigDecimal("5"), new BigDecimal("100000"))
+			);
+			given(accountRepository.findByIdAndUserId(ACCOUNT_ID, USER_ID)).willReturn(Optional.of(account()));
+			given(tradeRepository.findALlByAccountId(ACCOUNT_ID)).willReturn(trades);
+			given(stockRepository.findById(STOCK_ID)).willReturn(Optional.of(stock()));
+			given(stockRepository.findById(STOCK_ID_2)).willReturn(Optional.of(stock2()));
+			given(stockPriceService.getCurrentPrice("005930")).willReturn(new BigDecimal("77000"));
+			given(stockPriceService.getCurrentPrice("000660")).willReturn(new BigDecimal("90000"));
+
+			// when
+			PortfolioResponse response = portfolioService.getPortfolio(USER_ID, ACCOUNT_ID);
+
+			// then
+			assertThat(response.totalPurchaseAmount()).isEqualByComparingTo(new BigDecimal("1200000"));
+			assertThat(response.totalEvaluationAmount()).isEqualByComparingTo(new BigDecimal("1220000"));
+			assertThat(response.totalProfitLoss()).isEqualByComparingTo(new BigDecimal("20000"));
+			assertThat(response.totalProfitLossRate()).isEqualByComparingTo(new BigDecimal("1.6667"));
 		}
 	}
 }
