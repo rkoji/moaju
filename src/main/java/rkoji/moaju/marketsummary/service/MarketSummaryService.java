@@ -1,5 +1,7 @@
 package rkoji.moaju.marketsummary.service;
 
+import static rkoji.moaju.global.exception.ErrorCode.*;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import rkoji.moaju.global.exception.CustomException;
+import rkoji.moaju.global.exception.ErrorCode;
 import rkoji.moaju.marketsummary.client.ClaudeApiClient;
 import rkoji.moaju.marketsummary.client.SecuritiesNewsClient;
+import rkoji.moaju.marketsummary.dto.MarketSummaryResponse;
 import rkoji.moaju.marketsummary.dto.NewsItem;
 import rkoji.moaju.marketsummary.dto.NewsSummaryResult;
 import rkoji.moaju.marketsummary.entity.MarketSummary;
@@ -70,6 +75,17 @@ public class MarketSummaryService {
 				.build());
 		}
 		marketSummaryNewsRepository.saveAll(newsEntities);
+	}
+
+	public MarketSummaryResponse getLatestSummary(){
+		MarketSummary marketSummary = marketSummaryRepository.findTopByOrderByDateDesc().orElseThrow(
+			() -> new CustomException(MARKET_SUMMARY_NOT_FOUND)
+		);
+
+		List<MarketSummaryNews> newsList = marketSummaryNewsRepository.findAllByMarketSummaryIdOrderByDisplayOrder(
+			marketSummary.getId());
+
+		return MarketSummaryResponse.of(marketSummary, newsList);
 	}
 
 }

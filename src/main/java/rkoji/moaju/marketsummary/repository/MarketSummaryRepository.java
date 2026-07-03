@@ -10,4 +10,6 @@ import rkoji.moaju.marketsummary.entity.MarketSummary;
 public interface MarketSummaryRepository extends JpaRepository<MarketSummary, Long> {
 
 	Optional<MarketSummary> findByDate(LocalDate date);
+
+	Optional<MarketSummary> findTopByOrderByDateDesc();
 }
