@@ -18,6 +18,7 @@ import rkoji.moaju.account.entity.BrokerageAccount;
 import rkoji.moaju.account.repository.BrokerageAccountRepository;
 import rkoji.moaju.global.exception.CustomException;
 import rkoji.moaju.global.exception.ErrorCode;
+import rkoji.moaju.portfolio.dto.HoldingResponse;
 import rkoji.moaju.portfolio.dto.PortfolioResponse;
 import rkoji.moaju.stock.entity.Currency;
 import rkoji.moaju.stock.entity.Market;
@@ -200,6 +201,55 @@ class PortfolioServiceTest {
 			assertThat(response.holdings().get(0).currentPrice()).isNull();
 			assertThat(response.holdings().get(0).profitLossRate()).isNull();
 		}
+
+		@Test
+		void 매도로_실현손익_발생() {
+			// given
+			// 10주 @ 70,000 매수(매수원금 700,000), 5주 @ 90,000 매도(매도금액 450,000)
+			// 실현손익 = 450,000 - 70,000*5 = 100,000
+			// 남은 5주, 현재가 80,000 → 평가손익 = (80,000-70,000)*5 = 50,000
+			// 총손익 = 150,000, 총수익률 = 150,000/700,000*100 = 21.4286%
+			List<Trade> trades = List.of(
+				buyTrade(new BigDecimal("10"), new BigDecimal("70000")),
+				sellTrade(new BigDecimal("5"), new BigDecimal("90000"))
+			);
+			given(accountRepository.findByIdAndUserId(ACCOUNT_ID, USER_ID)).willReturn(Optional.of(account()));
+			given(tradeRepository.findALlByAccountId(ACCOUNT_ID)).willReturn(trades);
+			given(stockRepository.findById(STOCK_ID)).willReturn(Optional.of(stock()));
+			given(stockPriceService.getCurrentPrice("005930")).willReturn(new BigDecimal("80000"));
+
+			// when
+			PortfolioResponse response = portfolioService.getPortfolio(USER_ID, ACCOUNT_ID);
+
+			// then
+			HoldingResponse holding = response.holdings().get(0);
+			assertThat(holding.realizedProfitLoss()).isEqualByComparingTo(new BigDecimal("100000"));
+			assertThat(holding.evaluationProfitLoss()).isEqualByComparingTo(new BigDecimal("50000"));
+			assertThat(holding.profitLoss()).isEqualByComparingTo(new BigDecimal("150000"));
+			assertThat(holding.profitLossRate()).isEqualByComparingTo(new BigDecimal("21.4286"));
+		}
+
+		@Test
+		void 전량_매도해도_실현손익은_전체_손익에_반영된다() {
+			// given
+			// 10주 @ 70,000 매수, 10주 @ 85,000 매도 → 실현손익 150,000, 보유수량 0
+			List<Trade> trades = List.of(
+				buyTrade(new BigDecimal("10"), new BigDecimal("70000")),
+				sellTrade(new BigDecimal("10"), new BigDecimal("85000"))
+			);
+			given(accountRepository.findByIdAndUserId(ACCOUNT_ID, USER_ID)).willReturn(Optional.of(account()));
+			given(tradeRepository.findALlByAccountId(ACCOUNT_ID)).willReturn(trades);
+			given(stockRepository.findById(STOCK_ID)).willReturn(Optional.of(stock()));
+
+			// when
+			PortfolioResponse response = portfolioService.getPortfolio(USER_ID, ACCOUNT_ID);
+
+			// then
+			assertThat(response.holdings()).isEmpty(); // 화면에 보여줄 보유 종목은 없지만
+			assertThat(response.totalRealizedProfitLoss()).isEqualByComparingTo(new BigDecimal("150000"));
+			assertThat(response.totalProfitLoss()).isEqualByComparingTo(new BigDecimal("150000"));
+			assertThat(response.totalProfitLossRate()).isEqualByComparingTo(new BigDecimal("21.4286"));
+		}
 	}
 
 	@Nested
@@ -272,6 +322,25 @@ class PortfolioServiceTest {
 			assertThat(response.totalEvaluationAmount()).isEqualByComparingTo(new BigDecimal("1220000"));
 			assertThat(response.totalProfitLoss()).isEqualByComparingTo(new BigDecimal("20000"));
 			assertThat(response.totalProfitLossRate()).isEqualByComparingTo(new BigDecimal("1.6667"));
+		}
+
+		@Test
+		void 전량_매도한_종목의_실현손익도_수익률_계산에_포함된다() {
+			// given
+			// 10주 @ 70,000 매수, 10주 @ 85,000 매도 → 실현손익 150,000, 매수원금 700,000
+			// 수익률 = 150,000/700,000*100 = 21.4286%
+			List<Trade> trades = List.of(
+				buyTrade(new BigDecimal("10"), new BigDecimal("70000")),
+				sellTrade(new BigDecimal("10"), new BigDecimal("85000"))
+			);
+			given(tradeRepository.findALlByAccountId(ACCOUNT_ID)).willReturn(trades);
+			given(stockRepository.findById(STOCK_ID)).willReturn(Optional.of(stock()));
+
+			// when
+			BigDecimal rate = portfolioService.calculateProfitRate(ACCOUNT_ID);
+
+			// then
+			assertThat(rate).isEqualByComparingTo(new BigDecimal("21.4286"));
 		}
 	}
 }

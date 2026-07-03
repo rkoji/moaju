@@ -86,11 +86,19 @@ export default function HoldingDetailPage() {
             <div style={{ fontWeight: "bold" }}>{formatKRW(holding.currentPrice)}</div>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: "#666" }}>수익금</div>
+            <div style={{ fontSize: 12, color: "#666" }}>실현손익</div>
+            <div style={{ fontWeight: "bold" }}><ProfitText value={holding.realizedProfitLoss} /></div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "#666" }}>평가손익</div>
+            <div style={{ fontWeight: "bold" }}><ProfitText value={holding.evaluationProfitLoss} /></div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "#666" }}>총손익</div>
             <div style={{ fontWeight: "bold" }}><ProfitText value={holding.profitLoss} /></div>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: "#666" }}>수익률</div>
+            <div style={{ fontSize: 12, color: "#666" }}>총수익률</div>
             <div style={{ fontWeight: "bold" }}><RateText value={holding.profitLossRate} /></div>
           </div>
         </div>

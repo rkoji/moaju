@@ -13,11 +13,13 @@ function formatRate(value) {
 }
 
 function ProfitText({ value }) {
+  if (value == null) return <span style={{ color: "#aaa" }}>-</span>;
   const color = value > 0 ? "#e03131" : value < 0 ? "#1971c2" : "#333";
   return <span style={{ color }}>{formatKRW(value)}</span>;
 }
 
 function RateText({ value }) {
+  if (value == null) return <span style={{ color: "#aaa" }}>-</span>;
   const color = value > 0 ? "#e03131" : value < 0 ? "#1971c2" : "#333";
   return <span style={{ color }}>{formatRate(value)}</span>;
 }
@@ -37,7 +39,14 @@ export default function PortfolioPage() {
   if (error) return <p style={{ color: "red", padding: 24 }}>{error}</p>;
   if (!portfolio) return <p style={{ padding: 24 }}>불러오는 중...</p>;
 
-  const { holdings, totalPurchaseAmount, totalEvaluationAmount, totalProfitLoss, totalProfitLossRate } = portfolio;
+  const {
+    holdings,
+    totalPurchaseAmount,
+    totalEvaluationAmount,
+    totalRealizedProfitLoss,
+    totalProfitLoss,
+    totalProfitLossRate,
+  } = portfolio;
 
   async function handleDeleteHolding(e, stockId) {
     e.stopPropagation();
@@ -66,7 +75,11 @@ export default function PortfolioPage() {
           <div style={{ fontWeight: "bold" }}>{formatKRW(totalEvaluationAmount)}</div>
         </div>
         <div>
-          <div style={{ fontSize: 12, color: "#666" }}>총 수익금</div>
+          <div style={{ fontSize: 12, color: "#666" }}>총 실현손익</div>
+          <div style={{ fontWeight: "bold" }}><ProfitText value={totalRealizedProfitLoss} /></div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: "#666" }}>총 손익</div>
           <div style={{ fontWeight: "bold" }}><ProfitText value={totalProfitLoss} /></div>
         </div>
         <div>
@@ -86,8 +99,9 @@ export default function PortfolioPage() {
               <th style={{ paddingBottom: 8 }}>보유수량</th>
               <th style={{ paddingBottom: 8 }}>평균매수가</th>
               <th style={{ paddingBottom: 8 }}>현재가</th>
-              <th style={{ paddingBottom: 8 }}>수익금</th>
-              <th style={{ paddingBottom: 8 }}>수익률</th>
+              <th style={{ paddingBottom: 8 }}>실현손익</th>
+              <th style={{ paddingBottom: 8 }}>평가손익</th>
+              <th style={{ paddingBottom: 8 }}>총수익률</th>
               <th style={{ paddingBottom: 8 }}></th>
             </tr>
           </thead>
@@ -107,7 +121,8 @@ export default function PortfolioPage() {
                 <td>{Number(h.quantity).toLocaleString()}</td>
                 <td>{formatKRW(h.averagePrice)}</td>
                 <td>{formatKRW(h.currentPrice)}</td>
-                <td><ProfitText value={h.profitLoss} /></td>
+                <td><ProfitText value={h.realizedProfitLoss} /></td>
+                <td><ProfitText value={h.evaluationProfitLoss} /></td>
                 <td><RateText value={h.profitLossRate} /></td>
                 <td>
                   <button
