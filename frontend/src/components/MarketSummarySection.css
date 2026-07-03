@@ -1,0 +1,114 @@
+.market-summary {
+  text-align: left;
+  margin-bottom: 40px;
+}
+
+.market-summary h2 {
+  text-align: left;
+  margin-bottom: 4px;
+}
+
+.market-summary-eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+.market-summary-meta {
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.75;
+  margin-bottom: 12px;
+}
+
+.market-summary-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  background: var(--code-bg);
+  box-shadow: var(--shadow);
+}
+
+.market-summary-card p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text-h);
+  text-align: left;
+}
+
+.market-summary.compact {
+  margin-bottom: 28px;
+}
+
+.market-summary.compact .market-summary-card {
+  padding: 18px 20px;
+  border-radius: 12px;
+}
+
+.market-summary.compact .market-summary-card p {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.market-summary-news-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 28px 0 16px;
+  letter-spacing: -0.1px;
+}
+
+.market-summary-news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.market-summary-news-item {
+  display: block;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.market-summary-news-item:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.market-summary-news-item-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-h);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.market-summary-news-item-summary {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.market-summary-status {
+  padding: 24px 0;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.market-summary-status.error {
+  color: #e5484d;
+  opacity: 1;
+}

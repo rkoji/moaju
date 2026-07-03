@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAccounts, createAccount, deleteAccount } from "../api/accountApi";
 import { useAuth } from "../auth/AuthContext";
+import MarketSummarySection from "../components/MarketSummarySection";
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState([]);
@@ -49,6 +50,8 @@ export default function AccountsPage() {
         <h2>내 계좌</h2>
         <button onClick={handleLogout}>로그아웃</button>
       </div>
+
+      <MarketSummarySection compact />
 
       <form onSubmit={handleCreate} style={{ marginBottom: 24 }}>
         <input
