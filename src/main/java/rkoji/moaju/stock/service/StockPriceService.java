@@ -23,7 +23,7 @@ public class StockPriceService {
 	private final Counter cacheHitCounter;
 	private final Counter cacheMissCounter;
 
-	private static final long CACHE_TTL_MINUTES = 5;
+	private static final long CACHE_TTL_SECONDS = 30;
 	private static final String LOCK_PREFIX = "lock:stock:price:";
 
 	public StockPriceService(KisStockClient kisStockClient, StringRedisTemplate redisTemplate,
@@ -55,7 +55,7 @@ public class StockPriceService {
 					return new BigDecimal(fallback);
 				}
 				BigDecimal price = kisStockClient.getCurrentPrice(ticker);
-				redisTemplate.opsForValue().set(cacheKey, price.toPlainString(), CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+				redisTemplate.opsForValue().set(cacheKey, price.toPlainString(), CACHE_TTL_SECONDS, TimeUnit.SECONDS);
 				return price;
 			}
 
@@ -69,7 +69,7 @@ public class StockPriceService {
 			log.info("[Cache MISS] ticker={} → KIS API 호출", ticker);
 			cacheMissCounter.increment();
 			BigDecimal price = kisStockClient.getCurrentPrice(ticker);
-			redisTemplate.opsForValue().set(cacheKey, price.toPlainString(), CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+			redisTemplate.opsForValue().set(cacheKey, price.toPlainString(), CACHE_TTL_SECONDS, TimeUnit.SECONDS);
 			return price;
 
 		} catch (InterruptedException e) {
