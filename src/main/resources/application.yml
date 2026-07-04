@@ -63,3 +63,8 @@ management:
 
 anthropic:
   api-key: ${ANTHROPIC_API_KEY}
+
+kis:
+  app-key: ${KIS_APP_KEY}
+  app-secret: ${KIS_APP_SECRET}
+  base-url: ${KIS_BASE_URL}
